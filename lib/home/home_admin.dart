@@ -39,7 +39,7 @@ class AdminPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               const Text(
-                'Welcome to Admin Dashboarddddddd',
+                'Welcome to Adminnnnnnnnnnnnnnn Dashboarddddddd',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
