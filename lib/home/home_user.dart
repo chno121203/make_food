@@ -3,88 +3,141 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:makefood/menu/restaurants_page.dart';
 import 'package:makefood/menu/meal_page.dart';
 import 'package:makefood/register/login_page.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'dart:math'; // สำหรับการสุ่ม
+import 'dart:math';
 
-class HomePage extends StatelessWidget {
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'แอพแนะนำอาหาร 🍽️',
+      theme: ThemeData(
+        primarySwatch: Colors.orange,
+        textTheme: GoogleFonts.kanitTextTheme(
+          Theme.of(context).textTheme,
+        ),
+      ),
+      home: HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    // ข้อดีของการกินอาหารครบ 5 หมู่
-    final List<String> tips = [
-      'กินผักและผลไม้ให้หลากหลายเพื่อรับวิตามินและแร่ธาตุ.',
-      'ดื่มน้ำให้เพียงพอทุกวันเพื่อให้ร่างกายทำงานได้อย่างมีประสิทธิภาพ.',
-      'เลือกกินธัญพืชเต็มเมล็ดแทนข้าวขาวเพื่อเพิ่มไฟเบอร์ในอาหาร.',
-      'ลดการบริโภคน้ำตาลและเกลือเพื่อลดความเสี่ยงต่อโรคเรื้อรัง.',
-      'การกินอาหารหลากหลายทำให้ร่างกายได้รับสารอาหารครบถ้วนและสมดุล.',
-    ];
+  _HomePageState createState() => _HomePageState();
+}
 
-    // สุ่มเลือกข้อความ
+class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
+  final List<String> tips = [
+    '🥗 กินผักและผลไม้ให้หลากหลายเพื่อรับวิตามินและแร่ธาตุ',
+    '💧 ดื่มน้ำให้เพียงพอทุกวันเพื่อให้ร่างกายทำงานได้อย่างมีประสิทธิภาพ',
+    '🌾 เลือกกินธัญพืชเต็มเมล็ดแทนข้าวขาวเพื่อเพิ่มไฟเบอร์ในอาหาร',
+    '🧂 ลดการบริโภคน้ำตาลและเกลือเพื่อลดความเสี่ยงต่อโรคเรื้อรัง',
+    '🍲 การกินอาหารหลากหลายทำให้ร่างกายได้รับสารอาหารครบถ้วนและสมดุล',
+  ];
+
+  final List<Map<String, dynamic>> menuItems = [
+    {
+      'name': 'เมนูแนะนำตามช่วงเวลา',
+      'page': RecipesPage(),
+      'icon': '🕒',
+      'color': Colors.blue,
+    },
+    {
+      'name': 'เมนูแนะนำยอดนิยม',
+      'page': RestaurantsPage(),
+      'icon': '⭐',
+      'color': Colors.amber,
+    },
+    {
+      'name': 'เมนูที่คุณชอบ',
+      'page': null,
+      'icon': '❤️',
+      'color': Colors.red,
+    },
+  ];
+
+  List<String> favoriteMenus = [];
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final random = Random();
     final tip = tips[random.nextInt(tips.length)];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('แนะนำอาหาร'),
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              _showLogoutDialog(context);
-            },
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.orange.shade300, Colors.orange.shade100],
           ),
-        ],
-        leading: IconButton(
-          icon: const FaIcon(FontAwesomeIcons.arrowLeft),
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const LoginPage()),
-            );
-          },
         ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Text(
-                'ยินดีต้อนรับสู่แอพแนะนำอาหาร',
-                style: GoogleFonts.roboto(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                child: Image.asset(
-                  'assets/images/Food.jpg',
-                  fit: BoxFit.cover,
-                  height: 200,
-                ),
-              ),
-              const SizedBox(height: 30),
-              _buildButton(context, 'เมนูแนะนำตามช่วงเวลา', RecipesPage()),
-              const SizedBox(height: 15),
-              _buildButton(context, 'เมนูเเนะนำประจำวัน', RestaurantsPage()),
-              const SizedBox(height: 30), // เพิ่มช่องว่างระหว่างปุ่มและข้อความ
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'Tips: $tip',
-                  style: GoogleFonts.roboto(
-                    fontSize: 16,
-                    color: Colors.black87,
-                    fontWeight: FontWeight.bold,
+        child: SafeArea(
+          child: CustomScrollView(
+            slivers: <Widget>[
+              SliverAppBar(
+                expandedHeight: 200.0,
+                floating: false,
+                pinned: true,
+                flexibleSpace: FlexibleSpaceBar(
+                  title: Text('แนะนำอาหาร 🍽️', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  background: Image.asset(
+                    'assets/images/Food.jpg',
+                    fit: BoxFit.cover,
                   ),
-                  textAlign: TextAlign.center,
+                ),
+                actions: <Widget>[
+                  IconButton(
+                    icon: const Text('👋', style: TextStyle(fontSize: 24)),
+                    onPressed: () => _showLogoutDialog(context),
+                  ),
+                ],
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      Text(
+                        'ยินดีต้อนรับสู่แอพแนะนำอาหาร 👨‍🍳👩‍🍳',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 30),
+                      ...menuItems.map((menuItem) => _buildMenuItem(context, menuItem)).toList(),
+                      SizedBox(height: 30),
+                      _buildTipCard(tip),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -94,50 +147,88 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildButton(BuildContext context, String text, Widget page) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-          foregroundColor: const Color.fromARGB(255, 0, 0, 0),
-          padding: const EdgeInsets.symmetric(vertical: 15),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          elevation: 5,
-        ),
-        onPressed: () {
-          Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => page,
-              transitionsBuilder:
-                  (context, animation, secondaryAnimation, child) {
-                const begin = Offset(1.0, 0.0);
-                const end = Offset.zero;
-                const curve = Curves.easeInOut;
-
-                final tween = Tween(begin: begin, end: end);
-                final curvedAnimation = CurvedAnimation(
-                  parent: animation,
-                  curve: curve,
-                );
-
-                return SlideTransition(
-                  position: tween.animate(curvedAnimation),
-                  child: child,
-                );
-              },
+  Widget _buildMenuItem(BuildContext context, Map<String, dynamic> menuItem) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Material(
+        elevation: 8,
+        borderRadius: BorderRadius.circular(15),
+        color: Colors.white,
+        child: InkWell(
+          onTap: () {
+            if (menuItem['name'] == 'เมนูที่คุณชอบ') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FavoritesPage(favoriteMenus: favoriteMenus),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => menuItem['page']),
+              );
+            }
+          },
+          child: Container(
+            padding: EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: menuItem['color'].withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(menuItem['icon'], style: TextStyle(fontSize: 30)),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    menuItem['name'],
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                // ลบ Icon ออก
+                // Icon(Icons.arrow_forward_ios, color: Colors.grey),
+              ],
             ),
-          );
-        },
-        child: Text(
-          text,
-          style: GoogleFonts.roboto(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTipCard(String tip) {
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            ScaleTransition(
+              scale: _animation,
+              child: Text('💡', style: TextStyle(fontSize: 40)),
+            ),
+            SizedBox(height: 10),
+            Text(
+              'เคล็ดลับสุขภาพ',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.orange,
+              ),
+            ),
+            SizedBox(height: 10),
+            Text(
+              tip,
+              style: TextStyle(fontSize: 16, color: Colors.black54),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );
@@ -148,47 +239,67 @@ class HomePage extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Confirm Logout'),
-          content: const Text('Are you sure you want to logout?'),
+          title: Text('ยืนยันการออกจากระบบ 🚪'),
+          content: Text('คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบ?'),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              child: Text('ยกเลิก ❌'),
+              onPressed: () => Navigator.of(context).pop(),
             ),
             TextButton(
-              child: const Text('Logout'),
+              child: Text('ออกจากระบบ ✅'),
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) =>
-                        const LoginPage(),
-                    transitionsBuilder:
-                        (context, animation, secondaryAnimation, child) {
-                      const begin = Offset(0.0, 1.0);
-                      const end = Offset.zero;
-                      const curve = Curves.easeInOut;
-
-                      final tween = Tween(begin: begin, end: end);
-                      final curvedAnimation = CurvedAnimation(
-                        parent: animation,
-                        curve: curve,
-                      );
-
-                      return SlideTransition(
-                        position: tween.animate(curvedAnimation),
-                        child: child,
-                      );
-                    },
-                  ),
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
                 );
               },
             ),
           ],
         );
       },
+    );
+  }
+}
+
+class FavoritesPage extends StatelessWidget {
+  final List<String> favoriteMenus;
+
+  const FavoritesPage({Key? key, required this.favoriteMenus}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('เมนูที่คุณชอบ ❤️'),
+        backgroundColor: Colors.orange,
+      ),
+      body: favoriteMenus.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('💔', style: TextStyle(fontSize: 100)),
+                  SizedBox(height: 20),
+                  Text(
+                    'คุณยังไม่มีเมนูโปรด\nกดปุ่มหัวใจเพื่อเพิ่มเมนูโปรด',
+                    style: TextStyle(fontSize: 20, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              itemCount: favoriteMenus.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  leading: Text('❤️', style: TextStyle(fontSize: 24)),
+                  title: Text(favoriteMenus[index]),
+                  // ลบ Icon ออก
+                  // trailing: Icon(Icons.arrow_forward_ios),
+                );
+              },
+            ),
     );
   }
 }
