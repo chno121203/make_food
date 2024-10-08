@@ -10,14 +10,23 @@ class RestaurantsPage extends StatefulWidget {
 }
 
 class _RestaurantsPageState extends State<RestaurantsPage> {
-  // To store the ratings for each menu item
-  List<int> ratings = List.filled(9, 0); // Initialize 9 menu items with 0 rating
+  // To store the ratings for each menu item, along with fictional average ratings
+  List<Map<String, dynamic>> menuItems = List.generate(9, (index) => {
+        'name': _getMenuName(index),
+        'userRating': 0, // User's rating
+        'avgRating': (index + 3) % 5 + 1, // Simulated average rating from other users
+        'imagePath': 'assets/images/Food.jpg',
+        'page': _getRestaurantPage(index),
+      });
 
   @override
   Widget build(BuildContext context) {
+    // Sort menuItems by average rating in descending order
+    menuItems.sort((a, b) => b['avgRating'].compareTo(a['avgRating']));
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('เมนูเเนะนำประจำวัน'),
+        title: const Text('เมนูเเนะนำยอดนิยม'),
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         automaticallyImplyLeading: false,
         leading: IconButton(
@@ -51,14 +60,14 @@ class _RestaurantsPageState extends State<RestaurantsPage> {
                   mainAxisSpacing: 16,
                   childAspectRatio: 0.8,
                 ),
-                itemCount: 9,
+                itemCount: menuItems.length,
                 itemBuilder: (context, index) {
                   return _buildRestaurantCard(
                     context,
-                    _getMenuName(index),
-                    'assets/images/Food.jpg',
-                    _getRestaurantPage(index),
-                    index, // Pass the index to handle rating for each menu
+                    menuItems[index]['name'],
+                    menuItems[index]['imagePath'],
+                    menuItems[index]['page'],
+                    index,
                   );
                 },
               ),
@@ -69,8 +78,7 @@ class _RestaurantsPageState extends State<RestaurantsPage> {
     );
   }
 
-  Widget _buildRestaurantCard(
-      BuildContext context, String name, String imagePath, Widget page, int index) {
+  Widget _buildRestaurantCard(BuildContext context, String name, String imagePath, Widget page, int index) {
     return GestureDetector(
       onTap: () {
         _navigateWithTransition(context, page);
@@ -100,11 +108,8 @@ class _RestaurantsPageState extends State<RestaurantsPage> {
               padding: const EdgeInsets.all(12.0),
               decoration: BoxDecoration(
                 borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
-                gradient: LinearGradient(
-                  colors: [
-                    const Color.fromARGB(255, 255, 255, 255),
-                    const Color.fromARGB(255, 255, 255, 255),
-                  ],
+                gradient: const LinearGradient(
+                  colors: [Colors.white, Colors.white],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
@@ -124,6 +129,8 @@ class _RestaurantsPageState extends State<RestaurantsPage> {
                   ),
                   const SizedBox(height: 8),
                   _buildStarRating(index), // Display star rating
+                  const SizedBox(height: 4),
+                  _buildAverageRating(index), // Display average rating
                 ],
               ),
             ),
@@ -133,7 +140,7 @@ class _RestaurantsPageState extends State<RestaurantsPage> {
     );
   }
 
-  // Widget to build the star rating system
+  // Widget to build the star rating system for user input
   Widget _buildStarRating(int index) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -141,13 +148,31 @@ class _RestaurantsPageState extends State<RestaurantsPage> {
         return IconButton(
           onPressed: () {
             setState(() {
-              ratings[index] = starIndex + 1; // Set the rating
+              menuItems[index]['userRating'] = starIndex + 1; // Set user's rating
             });
           },
           icon: FaIcon(
-            ratings[index] > starIndex ? FontAwesomeIcons.solidStar : FontAwesomeIcons.star,
-            color: ratings[index] > starIndex ? Colors.amber : Colors.grey,
+            menuItems[index]['userRating'] > starIndex
+                ? FontAwesomeIcons.solidStar
+                : FontAwesomeIcons.star,
+            color: menuItems[index]['userRating'] > starIndex ? Colors.amber : Colors.grey,
           ),
+        );
+      }),
+    );
+  }
+
+  // Widget to display the average rating from other users
+  Widget _buildAverageRating(int index) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(5, (starIndex) {
+        return FaIcon(
+          menuItems[index]['avgRating'] > starIndex
+              ? FontAwesomeIcons.solidStar
+              : FontAwesomeIcons.star,
+          color: menuItems[index]['avgRating'] > starIndex ? Colors.amber : Colors.grey,
+          size: 16, // Smaller star for average rating display
         );
       }),
     );
@@ -175,7 +200,7 @@ class _RestaurantsPageState extends State<RestaurantsPage> {
     );
   }
 
-  String _getMenuName(int index) {
+  static String _getMenuName(int index) {
     final menuNames = [
       'ข้าวหน้าสลัดเนื้อกับผักดองสามรส',
       'ผัดไทยกุ้งสด',
@@ -190,7 +215,7 @@ class _RestaurantsPageState extends State<RestaurantsPage> {
     return menuNames[index];
   }
 
-  Widget _getRestaurantPage(int index) {
+  static Widget _getRestaurantPage(int index) {
     final pages = [
       const RestaurantDetailPage(),
     ];
