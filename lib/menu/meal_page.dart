@@ -3,7 +3,7 @@ import 'package:makefood/meal/morningmeal.dart';
 import 'package:makefood/meal/lunch.dart';
 import 'package:makefood/meal/dinner.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'dart:math'; // สำหรับการสุ่ม
+import 'dart:math';
 
 class RecipesPage extends StatelessWidget {
   const RecipesPage({super.key});
@@ -11,26 +11,25 @@ class RecipesPage extends StatelessWidget {
   Widget _buildMealButton(BuildContext context, String text, Widget page) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.green,
-        foregroundColor: const Color.fromARGB(255, 0, 0, 0),
+        backgroundColor: Colors.orange[100],
+        foregroundColor: Colors.orange[800],
         padding: const EdgeInsets.symmetric(vertical: 15),
-        minimumSize: const Size.fromHeight(60), // ปรับขนาดปุ่มให้ใหญ่ขึ้น
+        minimumSize: const Size.fromHeight(60),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(15),
         ),
       ).copyWith(
-        elevation: WidgetStateProperty.resolveWith<double>((states) {
-          if (states.contains(WidgetState.hovered)) {
-            return 10; // เพิ่มความนูนเมื่อ hover
+        elevation: MaterialStateProperty.resolveWith<double>((states) {
+          if (states.contains(MaterialState.hovered)) {
+            return 10;
           }
-          return 5; // ความนูนปกติ
+          return 5;
         }),
-        backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-          if (states.contains(WidgetState.hovered)) {
-            return Color.fromARGB(
-                255, 243, 243, 243); // เปลี่ยนเป็นสีเหลืองเมื่อ hover
+        backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+          if (states.contains(MaterialState.hovered)) {
+            return Colors.orange[200]!;
           }
-          return const Color.fromARGB(255, 255, 255, 255); // สีปกติ
+          return Colors.orange[100]!;
         }),
       ),
       onPressed: () {
@@ -38,9 +37,8 @@ class RecipesPage extends StatelessWidget {
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) => page,
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-              const begin = Offset(1.0, 0.0); // จากขวาไปซ้าย
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const begin = Offset(1.0, 0.0);
               const end = Offset.zero;
               const curve = Curves.easeInOut;
 
@@ -58,71 +56,85 @@ class RecipesPage extends StatelessWidget {
           ),
         );
       },
-      child: Text(text, style: const TextStyle(fontSize: 18)),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 18, color: Colors.orange[800]),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // ข้อดีของการกินอาหารครบ 5 หมู่
     final List<String> tips = [
-      'ช่วยให้ร่างกายได้รับสารอาหารที่จำเป็นครบถ้วนและสมดุล.',
-      'ช่วยเสริมสร้างระบบภูมิคุ้มกันและป้องกันโรค.',
-      'ทำให้การเจริญเติบโตและการพัฒนาร่างกายเป็นไปอย่างเหมาะสม.',
-      'ช่วยให้การทำงานของระบบย่อยอาหารดีขึ้น.',
-      'ช่วยรักษาน้ำหนักตัวให้อยู่ในระดับที่เหมาะสม.',
+      '🍎 ช่วยให้ร่างกายได้รับสารอาหารที่จำเป็นครบถ้วนและสมดุล',
+      '🛡️ ช่วยเสริมสร้างระบบภูมิคุ้มกันและป้องกันโรค',
+      '🌱 ทำให้การเจริญเติบโตและการพัฒนาร่างกายเป็นไปอย่างเหมาะสม',
+      '🥗 ช่วยให้การทำงานของระบบย่อยอาหารดีขึ้น',
+      '⚖️ ช่วยรักษาน้ำหนักตัวให้อยู่ในระดับที่เหมาะสม',
     ];
 
-    // สุ่มเลือกข้อความ
     final random = Random();
     final tip = tips[random.nextInt(tips.length)];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('แนะนำอาหารแต่ละหมู่'),
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-        automaticallyImplyLeading: false, // ซ่อนลูกศรย้อนกลับอัตโนมัติ
+        title: Text('แนะนำอาหารแต่ละหมู่ 🍽️', style: TextStyle(color: Colors.orange[800])),
+        backgroundColor: Colors.orange[50],
+        automaticallyImplyLeading: false,
         leading: IconButton(
-          icon: const FaIcon(
-              FontAwesomeIcons.arrowLeft), // ไอคอนจาก Awesome Icons
+          icon: FaIcon(FontAwesomeIcons.arrowLeft, color: Colors.orange[800]),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                child: Image.asset(
-                  'assets/images/Food.jpg',
-                  fit: BoxFit.cover,
-                  height: 200,
-                ),
-              ),
-              const SizedBox(height: 20), // เพิ่มช่องว่างระหว่างรูปภาพและปุ่ม
-              _buildMealButton(context, 'ช่วงเช้า', const MorningMealPage()),
-              const SizedBox(height: 20),
-              _buildMealButton(context, 'ช่วงเที่ยง', const LunchPage()),
-              const SizedBox(height: 20),
-              _buildMealButton(context, 'ช่วงเย็น', const DinnerPage()),
-              const SizedBox(height: 20), // เพิ่มช่องว่างระหว่างปุ่มและข้อความ
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'Tips : $tip',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black87,
-                    fontWeight: FontWeight.bold,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.orange[50]!, Colors.orange[100]!],
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: Image.asset(
+                    'assets/images/Food.jpg',
+                    fit: BoxFit.cover,
+                    height: 200,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 20),
+                _buildMealButton(context, 'ช่วงเช้า ☀️', const MorningMealPage()),
+                const SizedBox(height: 20),
+                _buildMealButton(context, 'ช่วงเที่ยง 🌞', const LunchPage()),
+                const SizedBox(height: 20),
+                _buildMealButton(context, 'ช่วงเย็น 🌙', const DinnerPage()),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[50],
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.orange[200]!),
+                  ),
+                  child: Text(
+                    'Tips : $tip',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.orange[800],
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
