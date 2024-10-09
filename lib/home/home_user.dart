@@ -92,19 +92,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     });
   }
 
-  Future<void> _updateFavoriteStatus(String menuName, bool isFavorite) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (isFavorite) {
-      // เพิ่มเมนูไปยังรายการโปรด
-      favoriteMenus.add(menuName);
-    } else {
-      // ลบเมนูออกจากรายการโปรด
-      favoriteMenus.remove(menuName);
-    }
-    // บันทึกรายการโปรด
-    await prefs.setStringList('favoriteMenus', favoriteMenus);
-  }
-
   @override
   Widget build(BuildContext context) {
     final random = Random();
@@ -174,8 +161,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   Widget _buildMenuItem(BuildContext context, Map<String, dynamic> menuItem) {
-    bool isFavorite = favoriteMenus.contains(menuItem['name']); // เช็คว่าเป็นเมนูที่ชอบหรือไม่
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Material(
@@ -217,17 +202,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     menuItem['name'],
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                ),
-                IconButton(
-                  icon: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: isFavorite ? Colors.red : Colors.grey,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _updateFavoriteStatus(menuItem['name'], !isFavorite); // อัปเดตสถานะเมนูที่ชอบ
-                    });
-                  },
                 ),
               ],
             ),
