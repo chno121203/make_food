@@ -119,7 +119,7 @@ class _LunchPageState extends State<LunchPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'อาหารเที่ยง',
+          'อาหารเช้า',
           style: TextStyle(color: Colors.black),
         ),
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
@@ -145,47 +145,67 @@ class _LunchPageState extends State<LunchPage> {
             ),
             const SizedBox(height: 20),
             const Text(
-              'รายการอาหารเที่ยงที่แนะนำ',
+              'รายการอาหารเช้าที่แนะนำ',
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
             // Dropdown for main category selection
-            DropdownButton<String>(
-              value: _selectedCategory,
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedCategory = newValue!;
-                  _selectedSubCategory = null; // Reset sub-category when changing main category
-                  _fetchRandomMeals(); // Fetch meals based on new category
-                });
-              },
-              items: _categories.map<DropdownMenuItem<String>>((category) {
-                return DropdownMenuItem<String>(
-                  value: category['value'],
-                  child: Text(category['label']!),
-                );
-              }).toList(),
+            Row(
+              children: [
+                const Text(
+                  'เลือกหมวดหมู่: ',
+                  style: TextStyle(fontSize: 16),
+                ),
+                Expanded(
+                  child: DropdownButton<String>(
+                    value: _selectedCategory,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedCategory = newValue!;
+                        _selectedSubCategory = null; // Reset sub-category when changing main category
+                        _fetchRandomMeals(); // Fetch meals based on new category
+                      });
+                    },
+                    items: _categories.map<DropdownMenuItem<String>>((category) {
+                      return DropdownMenuItem<String>(
+                        value: category['value'],
+                        child: Text(category['label']!),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
 
-            // Dropdown for sub-category selection
+            // Dropdown for sub-category selection with label
             if (_selectedCategory != 'all' && _subCategories.containsKey(_selectedCategory))
-              DropdownButton<String>(
-                value: _selectedSubCategory,
-                hint: const Text('เลือกวัตถุดิบย่อย'),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedSubCategory = newValue!;
-                    _fetchRandomMeals(); // Fetch meals based on selected sub-category
-                  });
-                },
-                items: _subCategories[_selectedCategory]!.map<DropdownMenuItem<String>>((subCategory) {
-                  return DropdownMenuItem<String>(
-                    value: subCategory['value'],
-                    child: Text(subCategory['label']!),
-                  );
-                }).toList(),
+              Row(
+                children: [
+                  const Text(
+                    'เลือกวัตถุดิบย่อย: ', 
+                    style: TextStyle(fontSize: 16), // Text label
+                  ),
+                  Expanded(
+                    child: DropdownButton<String>(
+                      value: _selectedSubCategory,
+                      hint: const Text('เลือกวัตถุดิบย่อย'),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedSubCategory = newValue!;
+                          _fetchRandomMeals(); // Fetch meals based on selected sub-category
+                        });
+                      },
+                      items: _subCategories[_selectedCategory]!.map<DropdownMenuItem<String>>((subCategory) {
+                        return DropdownMenuItem<String>(
+                          value: subCategory['value'],
+                          child: Text(subCategory['label']!),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
               ),
             const SizedBox(height: 20),
 
@@ -249,15 +269,20 @@ class _LunchPageState extends State<LunchPage> {
                               title: Text(meal['menuName']),
                               trailing: IconButton(
                                 icon: Icon(
-                                  _favoriteMeals[meal['menuName']]! ? 
-                                  FontAwesomeIcons.solidHeart : FontAwesomeIcons.heart,
-                                  color: _favoriteMeals[meal['menuName']]! ? Colors.red : null,
+                                  _favoriteMeals[meal['menuName']] == true
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color: _favoriteMeals[meal['menuName']] == true
+                                      ? Colors.red
+                                      : Colors.grey,
                                 ),
                                 onPressed: () {
                                   setState(() {
-                                    _favoriteMeals[meal['menuName']] = !_favoriteMeals[meal['menuName']]!;
+                                    _favoriteMeals[meal['menuName']] =
+                                        !_favoriteMeals[meal['menuName']]!;
                                   });
-                                  _updateFavoriteStatus(meal['menuName'], _favoriteMeals[meal['menuName']]!);
+                                  _updateFavoriteStatus(meal['menuName'],
+                                      _favoriteMeals[meal['menuName']]!);
                                 },
                               ),
                             ),
