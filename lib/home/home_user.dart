@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:makefood/menu/restaurants_page.dart';
 import 'package:makefood/menu/meal_page.dart';
 import 'package:makefood/register/login_page.dart';
+import 'package:makefood/home/favorites_page.dart'; // นำเข้า FavoritesPage
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
 
 void main() {
@@ -69,6 +71,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   @override
   void initState() {
     super.initState();
+    _loadFavoriteMenus(); // โหลดเมนูที่ชอบเมื่อเริ่มต้น
     _controller = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
@@ -80,6 +83,26 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadFavoriteMenus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      favoriteMenus = prefs.getStringList('favoriteMenus') ?? [];
+    });
+  }
+
+  Future<void> _updateFavoriteStatus(String menuName, bool isFavorite) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (isFavorite) {
+      // เพิ่มเมนูไปยังรายการโปรด
+      favoriteMenus.add(menuName);
+    } else {
+      // ลบเมนูออกจากรายการโปรด
+      favoriteMenus.remove(menuName);
+    }
+    // บันทึกรายการโปรด
+    await prefs.setStringList('favoriteMenus', favoriteMenus);
   }
 
   @override
@@ -104,7 +127,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 floating: false,
                 pinned: true,
                 flexibleSpace: FlexibleSpaceBar(
-                  title: Text('แนะนำอาหาร 🍽️', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  title: Text(
+                    'แนะนำอาหาร 🍽️',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
                   background: Image.asset(
                     'assets/images/Food.jpg',
                     fit: BoxFit.cover,
@@ -148,6 +174,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   Widget _buildMenuItem(BuildContext context, Map<String, dynamic> menuItem) {
+    bool isFavorite = favoriteMenus.contains(menuItem['name']); // เช็คว่าเป็นเมนูที่ชอบหรือไม่
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Material(
@@ -164,6 +192,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 ),
               );
             } else {
+              // แสดงเมนูที่แนะนำ
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => menuItem['page']),
@@ -189,8 +218,17 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
-                // ลบ Icon ออก
-                // Icon(Icons.arrow_forward_ios, color: Colors.grey),
+                IconButton(
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorite ? Colors.red : Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _updateFavoriteStatus(menuItem['name'], !isFavorite); // อัปเดตสถานะเมนูที่ชอบ
+                    });
+                  },
+                ),
               ],
             ),
           ),
@@ -240,66 +278,25 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('ยืนยันการออกจากระบบ 🚪'),
-          content: Text('คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบ?'),
-          actions: <Widget>[
+          content: Text('คุณต้องการออกจากระบบหรือไม่?'),
+          actions: [
             TextButton(
-              child: Text('ยกเลิก ❌'),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('ยกเลิก'),
             ),
             TextButton(
-              child: Text('ออกจากระบบ ✅'),
               onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => LoginPage()),
                 );
               },
+              child: Text('ออกจากระบบ'),
             ),
           ],
         );
       },
-    );
-  }
-}
-
-class FavoritesPage extends StatelessWidget {
-  final List<String> favoriteMenus;
-
-  const FavoritesPage({Key? key, required this.favoriteMenus}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('เมนูที่คุณชอบ ❤️'),
-        backgroundColor: Colors.orange,
-      ),
-      body: favoriteMenus.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('💔', style: TextStyle(fontSize: 100)),
-                  SizedBox(height: 20),
-                  Text(
-                    'คุณยังไม่มีเมนูโปรด\nกดปุ่มหัวใจเพื่อเพิ่มเมนูโปรด',
-                    style: TextStyle(fontSize: 20, color: Colors.grey),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              itemCount: favoriteMenus.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  leading: Text('❤️', style: TextStyle(fontSize: 24)),
-                  title: Text(favoriteMenus[index]),
-                  // ลบ Icon ออก
-                  // trailing: Icon(Icons.arrow_forward_ios),
-                );
-              },
-            ),
     );
   }
 }

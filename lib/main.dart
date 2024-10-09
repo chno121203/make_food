@@ -11,7 +11,7 @@ Future<void> main() async {
     );
     print("Firebase initialized successfully");
   } catch (e) {
-    print("Failed to initialize Firebase: $e");
+    print("ailed to initialize Firebase: $e");
   }
 
   runApp(const MyApp());
