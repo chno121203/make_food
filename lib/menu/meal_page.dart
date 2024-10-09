@@ -78,7 +78,7 @@ class RecipesPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('แนะนำอาหารแต่ละหมู่ 🍽️', style: TextStyle(color: Colors.orange[800])),
+        title: Text('แนะนำอาหารแต่ละมื้ออาหาร 🍽️', style: TextStyle(color: Colors.orange[800])),
         backgroundColor: Colors.orange[50],
         automaticallyImplyLeading: false,
         leading: IconButton(
