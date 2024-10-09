@@ -17,7 +17,9 @@ class _AddMenuPageState extends State<AddPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   String _menuName = '';
-  String _ingredients = '';
+  String _ingredientsCategory =
+      'เมนูเนื้อสัตว์'; // ค่าเริ่มต้นของหมวดหมู่วัตถุดิบหลัก
+  String _ingredient = ''; // วัตถุดิบหลัก
   String _recipe = '';
   String _meal = 'morningmeal'; // Default value for meal
   String _youtubeLink = '';
@@ -28,6 +30,14 @@ class _AddMenuPageState extends State<AddPage> {
   // URL ของภาพเริ่มต้น
   final String _defaultImageUrl =
       'https://images.ctfassets.net/kugm9fp9ib18/3aHPaEUU9HKYSVj1CTng58/d6750b97344c1dc31bdd09312d74ea5b/menu-default-image_220606_web.png';
+
+  // รายการหมวดหมู่วัตถุดิบหลัก
+  final Map<String, List<String>> _ingredientOptions = {
+    'เมนูเนื้อสัตว์': ['เนื้อวัว', 'เนื้อไก่', 'เนื้อแพะ', 'เนื้อแกะ'],
+    'เมนูอาหารทะเล': ['กุ้ง', 'หอย', 'ปู', 'ปลา', 'หมึก'],
+    'เมนูจากผัก': ['ผักเขียว', 'ผักดอก'],
+    'เมนูไข่': ['ไข่ไก่', 'ไข่เป็ด', 'ไข่เยี่ยวม้า'],
+  };
 
   // ฟังก์ชันในการอัพโหลดไฟล์ภาพ
   Future<String?> _uploadImage(File image) async {
@@ -54,7 +64,8 @@ class _AddMenuPageState extends State<AddPage> {
           'menuID${DateTime.now().millisecondsSinceEpoch}'; // สร้าง ID สำหรับเมนู
       await FirebaseFirestore.instance.collection('menus').doc(menuId).set({
         'menuName': _menuName,
-        'ingredients': _ingredients,
+        'ingredientsCategory': _ingredientsCategory,
+        'ingredient': _ingredient,
         'recipe': _recipe,
         'meal': _meal,
         'youtubeLink': _youtubeLink,
@@ -81,8 +92,7 @@ class _AddMenuPageState extends State<AddPage> {
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         automaticallyImplyLeading: false, // ซ่อนลูกศรย้อนกลับอัตโนมัติ
         leading: IconButton(
-          icon: const FaIcon(
-              FontAwesomeIcons.arrowLeft), // ไอคอนจาก Awesome Icons
+          icon: const FaIcon(FontAwesomeIcons.arrowLeft),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -116,6 +126,65 @@ class _AddMenuPageState extends State<AddPage> {
                             ),
                     ),
                   ),
+                ),
+                const SizedBox(height: 20),
+                // Dropdown สำหรับหมวดหมู่วัตถุดิบหลัก
+                DropdownButtonFormField<String>(
+                  value: _ingredientsCategory,
+                  decoration: const InputDecoration(
+                    labelText: 'หมวดหมู่วัตถุดิบหลัก',
+                    border: OutlineInputBorder(),
+                  ),
+                  icon: const FaIcon(
+                    FontAwesomeIcons.chevronDown,
+                    color: Colors.black,
+                  ),
+                  items: _ingredientOptions.keys.map((String category) {
+                    return DropdownMenuItem(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _ingredientsCategory = value!;
+                      _ingredient = ''; // รีเซ็ตวัตถุดิบเมื่อเลือกหมวดหมู่ใหม่
+                    });
+                  },
+                ),
+                const SizedBox(height: 20),
+                // Dropdown สำหรับวัตถุดิบหลัก
+                DropdownButtonFormField<String>(
+                  value: _ingredient.isEmpty
+                      ? null
+                      : _ingredient, // ตั้งค่าเป็น null ถ้าไม่มีการเลือกวัตถุดิบ
+                  decoration: const InputDecoration(
+                    labelText: 'วัตถุดิบหลัก',
+                    border: OutlineInputBorder(),
+                  ),
+
+                  icon: const FaIcon(
+                    FontAwesomeIcons.chevronDown,
+                    color: Colors.black,
+                  ),
+                  items: (_ingredientOptions[_ingredientsCategory] ?? [])
+                      .map((String ingredient) {
+                    return DropdownMenuItem(
+                      value: ingredient,
+                      child: Text(ingredient),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _ingredient = value!;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'กรุณาเลือกวัตถุดิบหลัก';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 20),
                 DropdownButtonFormField<String>(
@@ -156,23 +225,6 @@ class _AddMenuPageState extends State<AddPage> {
                   },
                   onSaved: (value) {
                     _menuName = value!;
-                  },
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'วัตถุดิบ',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'กรุณากรอกวัตถุดิบ';
-                    }
-                    return null;
-                  },
-                  onSaved: (value) {
-                    _ingredients = value!;
                   },
                 ),
                 const SizedBox(height: 20),
@@ -220,22 +272,15 @@ class _AddMenuPageState extends State<AddPage> {
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
                       _formKey.currentState!.save();
-                      String imageUrl;
+                      String imageUrl = _defaultImageUrl;
+
                       if (_imageFile != null) {
-                        final uploadedImageUrl =
-                            await _uploadImage(_imageFile!);
-                        if (uploadedImageUrl != null) {
-                          imageUrl = uploadedImageUrl;
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Error uploading image')),
-                          );
-                          return;
+                        final uploadedUrl = await _uploadImage(_imageFile!);
+                        if (uploadedUrl != null) {
+                          imageUrl = uploadedUrl;
                         }
-                      } else {
-                        imageUrl = _defaultImageUrl;
                       }
+
                       await _saveMenuData(imageUrl);
                     }
                   },
@@ -256,12 +301,12 @@ class _AddMenuPageState extends State<AddPage> {
     );
   }
 
+  // ฟังก์ชันในการเลือกรูปภาพจากแกลเลอรี
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(
-        source: ImageSource.gallery); // เลือกภาพจากแกลเลอรี
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
-        _imageFile = File(pickedFile.path); // เก็บไฟล์ภาพ
+        _imageFile = File(pickedFile.path);
       });
     }
   }
