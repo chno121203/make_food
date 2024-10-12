@@ -105,7 +105,17 @@ class _MorningMealPageState extends State<MorningMealPage> {
 
   Future<void> _updateFavoriteStatus(String menuName, int status) async {
     print('Updated favorite status for $menuName to $status');
-    // Add your Firestore update logic here if needed
+    
+    try {
+      // Assuming you have a user ID to associate the favorite with
+      String userId = 'exampleUserId'; // Replace this with the actual user ID
+
+      await _firestore.collection('favorites').doc(userId).set({
+        menuName: status,
+      }, SetOptions(merge: true)); // Merge to update existing fields
+    } catch (e) {
+      print('Error updating favorite status: $e');
+    }
   }
 
   @override
@@ -246,60 +256,44 @@ class _MorningMealPageState extends State<MorningMealPage> {
                               ),
                             );
                           },
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(15),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.grey,
-                                  blurRadius: 5.0,
-                                  spreadRadius: 1.0,
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Expanded(
-                                  child: Column(
+                          child: Card(
+                            margin: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: <Widget>[
                                       Text(
                                         meal['menuName'],
-                                        style: const TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                                       ),
-                                      const SizedBox(height: 5),
+                                      const SizedBox(height: 8),
                                       Text(
                                         meal['recipe'] ?? 'ไม่มีรายละเอียด',
                                         style: const TextStyle(color: Colors.grey),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
-                                ),
-                                IconButton(
-                                  icon: Icon(
-                                    _favoriteMeals[meal['menuName']] == 0
-                                        ? Icons.favorite_border
-                                        : Icons.favorite,
-                                    color: _favoriteMeals[meal['menuName']] == 0 ? Colors.grey : Colors.red,
+                                  IconButton(
+                                    icon: Icon(
+                                      _favoriteMeals[meal['menuName']] == 1
+                                          ? Icons.favorite
+                                          : Icons.favorite_border,
+                                      color: _favoriteMeals[meal['menuName']] == 1 ? Colors.red : null,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _favoriteMeals[meal['menuName']] =
+                                            _favoriteMeals[meal['menuName']] == 1 ? 0 : 1;
+                                        _updateFavoriteStatus(meal['menuName'], _favoriteMeals[meal['menuName']]!);
+                                      });
+                                    },
                                   ),
-                                  onPressed: () {
-                                    setState(() {
-                                      // Toggle favorite status
-                                      _favoriteMeals[meal['menuName']] = _favoriteMeals[meal['menuName']] == 0 ? 1 : 0;
-                                      _updateFavoriteStatus(meal['menuName'], _favoriteMeals[meal['menuName']]!);
-                                    });
-                                  },
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         );
