@@ -1,19 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RestaurantDetailPage extends StatelessWidget {
-  const RestaurantDetailPage({Key? key}) : super(key: key);
+  final String restaurantName; 
+  final String description; 
+  final List<Map<String, String>> ingredients; 
+
+  const RestaurantDetailPage({
+    Key? key,
+    required this.restaurantName,
+    required this.description,
+    required this.ingredients,
+  }) : super(key: key); 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detail'),
+        title: const Text('รายละเอียดเมนู'),
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-        automaticallyImplyLeading: false, // ซ่อนลูกศรย้อนกลับอัตโนมัติ
+        automaticallyImplyLeading: false,
         leading: IconButton(
-          icon: const FaIcon(
-              FontAwesomeIcons.arrowLeft), // ไอคอนจาก Awesome Icons
+          icon: const FaIcon(FontAwesomeIcons.arrowLeft), 
           onPressed: () {
             Navigator.pop(context);
           },
@@ -36,11 +45,10 @@ class RestaurantDetailPage extends StatelessWidget {
                   left: 16,
                   child: Container(
                     color: Colors.black54,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     child: Text(
-                      'ข้าวหน้าสลัดเนื้อกับผักดองสามรส',
-                      style: TextStyle(
+                      restaurantName, 
+                      style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: Colors.white),
@@ -50,7 +58,7 @@ class RestaurantDetailPage extends StatelessWidget {
               ],
             ),
             Container(
-              color: Color(0xFFFFF3E0), // Light orange background
+              color: const Color(0xFFFFF3E0),
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,42 +70,49 @@ class RestaurantDetailPage extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                         color: Colors.orange[800]),
                   ),
-                  SizedBox(height: 10),
-                  _buildIngredientRow('เนื้อวัวสไลด์', '230', 'กรัม'),
-                  _buildIngredientRow('ผักดองคอนโซเมะ', '30', 'กรัม'),
-                  _buildIngredientRow('เเตงกวาญี่ปุ่น', '1', 'ลูก/ผล'),
-                  _buildIngredientRow('แครอทหั่นแว่น', '50', 'กรัม'),
-                  _buildIngredientRow('มันฝรั่งต้มสุก', '50', 'กรัม'),
+                  const SizedBox(height: 10),
+                  ...ingredients.map((ingredient) => _buildIngredientRow(
+                          ingredient['name']!,
+                          ingredient['amount']!,
+                          ingredient['unit']!)).toList(), 
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
+            const Padding(
+              padding: EdgeInsets.all(16.0),
               child: Text(
                 'คำแนะนำ:',
                 style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.orange[800]),
+                    color: Color.fromARGB(255, 247, 113, 3)),
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
-                'ข้าวหน้าสลัดเนื้อกับผักดองสามรสเป็นอาหารที่มีรสชาติเข้มข้นและอร่อยสดชื่น เหมาะสำหรับมื้อเที่ยงหรือมื้อเย็น '
-                'ที่ต้องการอาหารที่ทั้งอิ่มและมีประโยชน์ต่อสุขภาพ. '
-                'สามารถทานคู่กับซอสสลัดหรือเพิ่มรสชาติด้วยน้ำจิ้มแจ่วได้ตามต้องการ.',
-                style: TextStyle(fontSize: 16, color: Colors.black87),
+                description, 
+                style: const TextStyle(fontSize: 16, color: Colors.black87),
               ),
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'ดูคลิปเพิ่มเติมได้ที่: https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-                style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.blue,
-                    decoration: TextDecoration.underline),
+              child: GestureDetector(
+                onTap: () async {
+                  const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+                  if (await canLaunch(url)) {
+                    await launch(url);
+                  } else {
+                    throw 'Could not launch $url';
+                  }
+                },
+                child: Text(
+                  'ดูคลิปเพิ่มเติมได้ที่: https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                  style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.blue,
+                      decoration: TextDecoration.underline),
+                ),
               ),
             ),
           ],
@@ -112,16 +127,16 @@ class RestaurantDetailPage extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(name, style: TextStyle(fontSize: 16, color: Colors.black87)),
+          Text(name, style: const TextStyle(fontSize: 16, color: Colors.black87)),
           Row(
             children: [
               Text(amount,
-                  style: TextStyle(
+                  style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87)),
-              SizedBox(width: 5),
-              Text(unit, style: TextStyle(fontSize: 16, color: Colors.black54)),
+              const SizedBox(width: 5),
+              Text(unit, style: const TextStyle(fontSize: 16, color: Colors.black54)),
             ],
           ),
         ],

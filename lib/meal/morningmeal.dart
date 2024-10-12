@@ -3,8 +3,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:makefood/menu/restaurant_detail_page.dart'; // Import the RestaurantDetailPage
 
-class MorningMealPage extends StatefulWidget {
-  const MorningMealPage({super.key});
+class MorningMealPage extends StatefulWidget {  
+  const MorningMealPage({Key? key}) : super(key: key);
 
   @override
   _MorningMealPageState createState() => _MorningMealPageState();
@@ -14,8 +14,8 @@ class _MorningMealPageState extends State<MorningMealPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<Map<String, dynamic>> _meals = [];
   bool _isLoading = true;
-  Map<String, bool> _favoriteMeals = {}; // Store favorite status of meals
-  String _selectedCategory = 'all'; // Default category
+  Map<String, bool> _favoriteMeals = {};
+  String _selectedCategory = 'all';
   String? _selectedSubCategory;
 
   final List<Map<String, String>> _categories = [
@@ -54,10 +54,14 @@ class _MorningMealPageState extends State<MorningMealPage> {
   @override
   void initState() {
     super.initState();
-    _fetchRandomMeals();
+    _fetchAllBreakfastMeals();
   }
 
-  Future<void> _fetchRandomMeals() async {
+  Future<void> _fetchAllBreakfastMeals() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       Query query = _firestore.collection('menus').where('meal', isEqualTo: 'morningmeal');
 
@@ -66,7 +70,7 @@ class _MorningMealPageState extends State<MorningMealPage> {
       }
 
       if (_selectedSubCategory != null) {
-        query = query.where('subCategory', isEqualTo: _selectedSubCategory);
+        query = query.where('subcategory', isEqualTo: _selectedSubCategory);
       }
 
       final querySnapshot = await query.get();
@@ -79,38 +83,29 @@ class _MorningMealPageState extends State<MorningMealPage> {
         return;
       }
 
-      // Shuffle and take 5 random meals
       final allMeals = querySnapshot.docs
           .map((doc) => doc.data() as Map<String, dynamic>)
           .toList();
-      allMeals.shuffle();
-      final randomMeals = allMeals.take(5).toList();
 
-      // Initialize favorite status
-      for (var meal in randomMeals) {
-        _favoriteMeals[meal['menuName']] = false; // Default to not favorite
+      for (var meal in allMeals) {
+        _favoriteMeals[meal['menuName']] = false;
       }
 
       setState(() {
-        _meals = randomMeals;
+        _meals = allMeals;
         _isLoading = false;
       });
     } catch (e) {
+      print('Error fetching meals: $e');
       setState(() {
         _isLoading = false;
       });
-      print('Error fetching meals: $e');
     }
   }
 
   Future<void> _updateFavoriteStatus(String menuName, bool isFavorite) async {
-    try {
-      await _firestore.collection('favorites').doc(menuName).set({
-        'isFavorite': isFavorite,
-      });
-    } catch (e) {
-      print('Error updating favorite status: $e');
-    }
+    print('Updated favorite status for $menuName to $isFavorite');
+    // Add your Firestore update logic here if needed
   }
 
   @override
@@ -149,7 +144,6 @@ class _MorningMealPageState extends State<MorningMealPage> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-            // Dropdown for main category selection
             Row(
               children: [
                 const Text(
@@ -163,7 +157,7 @@ class _MorningMealPageState extends State<MorningMealPage> {
                       setState(() {
                         _selectedCategory = newValue!;
                         _selectedSubCategory = null; // Reset sub-category when changing main category
-                        _fetchRandomMeals(); // Fetch meals based on new category
+                        _fetchAllBreakfastMeals(); // Fetch meals based on new category
                       });
                     },
                     items: _categories.map<DropdownMenuItem<String>>((category) {
@@ -178,13 +172,12 @@ class _MorningMealPageState extends State<MorningMealPage> {
             ),
             const SizedBox(height: 20),
 
-            // Dropdown for sub-category selection with label
             if (_selectedCategory != 'all' && _subCategories.containsKey(_selectedCategory))
               Row(
                 children: [
                   const Text(
-                    'เลือกวัตถุดิบย่อย: ', 
-                    style: TextStyle(fontSize: 16), // Text label
+                    'เลือกวัตถุดิบย่อย: ',
+                    style: TextStyle(fontSize: 16),
                   ),
                   Expanded(
                     child: DropdownButton<String>(
@@ -193,7 +186,7 @@ class _MorningMealPageState extends State<MorningMealPage> {
                       onChanged: (String? newValue) {
                         setState(() {
                           _selectedSubCategory = newValue!;
-                          _fetchRandomMeals(); // Fetch meals based on selected sub-category
+                          _fetchAllBreakfastMeals(); // Fetch meals based on selected sub-category
                         });
                       },
                       items: _subCategories[_selectedCategory]!.map<DropdownMenuItem<String>>((subCategory) {
@@ -221,7 +214,19 @@ class _MorningMealPageState extends State<MorningMealPage> {
                               context,
                               PageRouteBuilder(
                                 pageBuilder: (context, animation, secondaryAnimation) =>
-                                    RestaurantDetailPage(),
+                                    RestaurantDetailPage(
+                                      restaurantName: meal['menuName'],
+                                      description: meal['description'] ?? 'ไม่มีรายละเอียด',
+                                      ingredients: List<Map<String, String>>.from(
+                                        meal['ingredients']?.map<Map<String, String>>((ingredient) {
+                                          return {
+                                            'name': ingredient['name'],
+                                            'amount': ingredient['amount'],
+                                            'unit': ingredient['unit'],
+                                          };
+                                        }) ?? [],
+                                      ),
+                                    ),
                                 transitionsBuilder: (context, animation, secondaryAnimation, child) {
                                   const begin = Offset(1.0, 0.0);
                                   const end = Offset.zero;
@@ -251,37 +256,26 @@ class _MorningMealPageState extends State<MorningMealPage> {
                                 BoxShadow(
                                   color: Colors.grey,
                                   blurRadius: 5.0,
-                                  spreadRadius: 0.0,
-                                  offset: Offset(0, 3),
+                                  spreadRadius: 1.0,
                                 ),
                               ],
                             ),
                             child: ListTile(
-                              contentPadding: const EdgeInsets.all(8.0),
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.grey[200],
-                                child: Text(
-                                  '${index + 1}', // Show numbering for the meal
-                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                                ),
-                              ),
                               title: Text(meal['menuName']),
+                              subtitle: Text(meal['description'] ?? 'ไม่มีรายละเอียด'),
                               trailing: IconButton(
-                                icon: Icon(
-                                  _favoriteMeals[meal['menuName']] == true
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                  color: _favoriteMeals[meal['menuName']] == true
-                                      ? Colors.red
-                                      : Colors.grey,
+                                icon: FaIcon(
+                                  _favoriteMeals[meal['menuName']]!
+                                      ? FontAwesomeIcons.solidHeart
+                                      : FontAwesomeIcons.heart,
+                                  color: _favoriteMeals[meal['menuName']]! ? Colors.red : Colors.grey,
                                 ),
                                 onPressed: () {
                                   setState(() {
-                                    _favoriteMeals[meal['menuName']] =
-                                        !_favoriteMeals[meal['menuName']]!;
+                                    // Toggle favorite status
+                                    _favoriteMeals[meal['menuName']] = !_favoriteMeals[meal['menuName']]!;
                                   });
-                                  _updateFavoriteStatus(meal['menuName'],
-                                      _favoriteMeals[meal['menuName']]!);
+                                  _updateFavoriteStatus(meal['menuName'], _favoriteMeals[meal['menuName']]!);
                                 },
                               ),
                             ),

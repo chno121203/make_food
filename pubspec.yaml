@@ -21,6 +21,8 @@ dependencies:
   cloud_firestore: ^5.2.1
   firebase_storage: ^12.1.3
   shared_preferences: ^2.0.11 # เพิ่มบรรทัดนี้
+  url_launcher: ^6.0.20
+  
 
 dev_dependencies:
   flutter_test:

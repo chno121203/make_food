@@ -21,7 +21,8 @@ class _RestaurantsPageState extends State<RestaurantsPage> {
         'avgRating': (index + 3) % 5 + 1,
         'imagePath': 'assets/images/Food.jpg',
         'emoji': _getEmoji(index), // Add emoji for each item
-        'page': _getRestaurantPage(index),
+        'description': 'Delicious ${_getMenuName(index)} with a special touch.', // Added description
+        'ingredients': _getIngredients(index), // Added ingredients
       });
 
   @override
@@ -93,7 +94,8 @@ class _RestaurantsPageState extends State<RestaurantsPage> {
                       menuItems[index]['name'],
                       menuItems[index]['imagePath'],
                       menuItems[index]['emoji'],
-                      menuItems[index]['page'],
+                      menuItems[index]['description'],
+                      menuItems[index]['ingredients'],
                       index,
                     );
                   },
@@ -106,10 +108,10 @@ class _RestaurantsPageState extends State<RestaurantsPage> {
     );
   }
 
-  Widget _buildRestaurantCard(BuildContext context, String name, String imagePath, String emoji, Widget page, int index) {
+  Widget _buildRestaurantCard(BuildContext context, String name, String imagePath, String emoji, String description, List<Map<String, String>> ingredients, int index) {
     return GestureDetector(
       onTap: () {
-        _navigateWithTransition(context, page);
+        _navigateWithTransition(context, RestaurantDetailPage(restaurantName: name, description: description, ingredients: ingredients)); // Pass menu name, description, and ingredients to RestaurantDetailPage
       },
       child: Card(
         elevation: 8,
@@ -224,7 +226,6 @@ class _RestaurantsPageState extends State<RestaurantsPage> {
     return emojis[index];
   }
 
-  // Existing methods remain the same
   static String _getMenuName(int index) {
     final menuNames = [
       'ข้าวหน้าสลัดเนื้อกับผักดองสามรส',
@@ -240,13 +241,22 @@ class _RestaurantsPageState extends State<RestaurantsPage> {
     return menuNames[index];
   }
 
-  static Widget _getRestaurantPage(int index) {
-    final pages = [
-      const RestaurantDetailPage(),
+  static List<Map<String, String>> _getIngredients(int index) {
+    final ingredients = [
+      [
+        {'name': 'ผักกาด', 'amount': '100', 'unit': 'กรัม'},
+        {'name': 'เนื้อวัว', 'amount': '150', 'unit': 'กรัม'},
+        {'name': 'น้ำสลัด', 'amount': '50', 'unit': 'มิลลิลิตร'},
+      ],
+      [
+        {'name': 'เส้นก๋วยเตี๋ยว', 'amount': '200', 'unit': 'กรัม'},
+        {'name': 'กุ้ง', 'amount': '100', 'unit': 'กรัม'},
+        {'name': 'น้ำซอส', 'amount': '30', 'unit': 'มิลลิลิตร'},
+      ],
+      // Add other ingredient lists for the remaining menu items
     ];
-    return index < pages.length
-        ? pages[index]
-        : const Center(child: Text('No page available'));
+
+    return ingredients[index % ingredients.length];
   }
 
   void _navigateWithTransition(BuildContext context, Widget page) {
