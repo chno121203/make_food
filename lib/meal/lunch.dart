@@ -54,17 +54,28 @@ class _LunchPageState extends State<LunchPage> {
   @override
   void initState() {
     super.initState();
+<<<<<<< HEAD
     _fetchAllBreakfastMeals();
   }
 
   Future<void> _fetchAllBreakfastMeals() async {
+=======
+    _fetchAllLunchMeals(); // Fetch all lunch meals on initialization
+  }
+
+  Future<void> _fetchAllLunchMeals() async {
+>>>>>>> 1e7a5cc6e161f561b80cd4ac1ecfeff57843f670
     setState(() {
       _isLoading = true;
     });
 
     try {
+<<<<<<< HEAD
       Query query =
           _firestore.collection('menus').where('meal', isEqualTo: 'lunchmeal');
+=======
+      Query query = _firestore.collection('menus').where('meal', isEqualTo: 'lunchmeal'); // Changed to 'lunchmeal'
+>>>>>>> 1e7a5cc6e161f561b80cd4ac1ecfeff57843f670
 
       if (_selectedCategory != 'all') {
         query = query.where('ingredient', isEqualTo: _selectedSubCategory);
@@ -144,7 +155,11 @@ class _LunchPageState extends State<LunchPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
+<<<<<<< HEAD
           'อาหารเช้า',
+=======
+          'อาหารเที่ยง',
+>>>>>>> 1e7a5cc6e161f561b80cd4ac1ecfeff57843f670
           style: TextStyle(color: Colors.black),
         ),
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
@@ -170,7 +185,11 @@ class _LunchPageState extends State<LunchPage> {
             ),
             const SizedBox(height: 20),
             const Text(
+<<<<<<< HEAD
               'รายการอาหารเช้าที่แนะนำ',
+=======
+              'รายการอาหารเที่ยงที่แนะนำ',
+>>>>>>> 1e7a5cc6e161f561b80cd4ac1ecfeff57843f670
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
@@ -187,9 +206,14 @@ class _LunchPageState extends State<LunchPage> {
                     onChanged: (String? newValue) {
                       setState(() {
                         _selectedCategory = newValue!;
+<<<<<<< HEAD
                         _selectedSubCategory =
                             null; // Reset sub-category when changing main category
                         _fetchAllBreakfastMeals(); // Fetch meals based on new category
+=======
+                        _selectedSubCategory = null; // Reset sub-category when changing main category
+                        _fetchAllLunchMeals(); // Fetch meals based on new category
+>>>>>>> 1e7a5cc6e161f561b80cd4ac1ecfeff57843f670
                       });
                     },
                     items:
@@ -219,7 +243,11 @@ class _LunchPageState extends State<LunchPage> {
                       onChanged: (String? newValue) {
                         setState(() {
                           _selectedSubCategory = newValue!;
+<<<<<<< HEAD
                           _fetchAllBreakfastMeals(); // Fetch meals based on selected sub-category
+=======
+                          _fetchAllLunchMeals(); // Fetch meals based on selected sub-category
+>>>>>>> 1e7a5cc6e161f561b80cd4ac1ecfeff57843f670
                         });
                       },
                       items: _subCategories[_selectedCategory]!
@@ -261,6 +289,7 @@ class _LunchPageState extends State<LunchPage> {
                               ),
                             );
                           },
+<<<<<<< HEAD
                           child: Card(
                             margin: const EdgeInsets.symmetric(vertical: 8.0),
                             elevation: 4,
@@ -311,6 +340,40 @@ class _LunchPageState extends State<LunchPage> {
                                     },
                                   ),
                                 ],
+=======
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(15),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.grey,
+                                  blurRadius: 5.0,
+                                  spreadRadius: 1.0,
+                                ),
+                              ],
+                            ),
+                            child: ListTile(
+                              title: Text(meal['menuName'] ?? 'ไม่มีชื่อ'),
+                              subtitle: Text(meal['description'] ?? 'ไม่มีรายละเอียด'),
+                              trailing: IconButton(
+                                icon: Icon(
+                                  _favoriteMeals[meal['menuName']] == true
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color: _favoriteMeals[meal['menuName']] == true
+                                      ? Colors.red
+                                      : null,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _favoriteMeals[meal['menuName']] = !_favoriteMeals[meal['menuName']]!; // Toggle favorite status
+                                  });
+                                  _updateFavoriteStatus(meal['menuName'], _favoriteMeals[meal['menuName']]!); // Update favorite status in Firestore
+                                },
+>>>>>>> 1e7a5cc6e161f561b80cd4ac1ecfeff57843f670
                               ),
                             ),
                           ),

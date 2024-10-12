@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:makefood/menu/restaurant_detail_page.dart';
+=======
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+>>>>>>> 1e7a5cc6e161f561b80cd4ac1ecfeff57843f670
 
 class FavoritesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+<<<<<<< HEAD
         title: Text('Favorite Menus'),
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -89,6 +94,46 @@ class FavoritesPage extends StatelessWidget {
           );
         },
       ),
+=======
+        title: const Text(
+          'เมนูโปรด',
+          style: TextStyle(color: Colors.black),
+        ),
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        leading: IconButton(
+          icon: const FaIcon(FontAwesomeIcons.arrowLeft, color: Colors.black),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
+      body: favoriteMenus.isEmpty
+          ? const Center(
+              child: Text(
+                'ยังไม่มีเมนูโปรด',
+                style: TextStyle(fontSize: 18),
+              ),
+            )
+          : ListView.builder(
+              itemCount: favoriteMenus.length,
+              itemBuilder: (context, index) {
+                final menuName = favoriteMenus[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                  child: ListTile(
+                    title: Text(
+                      menuName,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    trailing: const Icon(
+                      FontAwesomeIcons.solidHeart,
+                      color: Colors.red,
+                    ),
+                  ),
+                );
+              },
+            ),
+>>>>>>> 1e7a5cc6e161f561b80cd4ac1ecfeff57843f670
     );
   }
 }

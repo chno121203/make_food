@@ -97,6 +97,7 @@ class _AddMenuPageState extends State<AddPage> {
         'ingredientsCategory': categoryInEnglish, // บันทึกเป็นภาษาอังกฤษ
         'ingredient': ingredientInEnglish, // บันทึกเป็นภาษาอังกฤษ
         'recipe': _recipe,
+        'favorites': '1',
         'meal': _meal,
         'youtubeLink': _youtubeLink,
         'imageUrl': imageUrl,

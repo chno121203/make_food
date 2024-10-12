@@ -14,7 +14,7 @@ class _MorningMealPageState extends State<MorningMealPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<Map<String, dynamic>> _meals = [];
   bool _isLoading = true;
-  Map<String, bool> _favoriteMeals = {};
+  Map<String, int> _favoriteMeals = {}; // Change to int
   String _selectedCategory = 'all';
   String? _selectedSubCategory;
 
@@ -92,8 +92,12 @@ class _MorningMealPageState extends State<MorningMealPage> {
       }).toList();
 
       for (var meal in allMeals) {
+<<<<<<< HEAD
         final isFavorite = meal['favorites'] == 1;
         _favoriteMeals[meal['menuName']] = isFavorite;
+=======
+        _favoriteMeals[meal['menuName']] = 0; // Initialize as 0 (not favorite)
+>>>>>>> 1e7a5cc6e161f561b80cd4ac1ecfeff57843f670
       }
 
       setState(() {
@@ -108,6 +112,7 @@ class _MorningMealPageState extends State<MorningMealPage> {
     }
   }
 
+<<<<<<< HEAD
   Future<void> _updateFavoriteStatus(String menuName, bool isFavorite) async {
     try {
       print(
@@ -135,6 +140,18 @@ class _MorningMealPageState extends State<MorningMealPage> {
       } else {
         print('No document found for menuName: $menuName');
       }
+=======
+  Future<void> _updateFavoriteStatus(String menuName, int status) async {
+    print('Updated favorite status for $menuName to $status');
+    
+    try {
+      // Assuming you have a user ID to associate the favorite with
+      String userId = 'exampleUserId'; // Replace this with the actual user ID
+
+      await _firestore.collection('favorites').doc(userId).set({
+        menuName: status,
+      }, SetOptions(merge: true)); // Merge to update existing fields
+>>>>>>> 1e7a5cc6e161f561b80cd4ac1ecfeff57843f670
     } catch (e) {
       print('Error updating favorite status: $e');
     }
@@ -246,6 +263,7 @@ class _MorningMealPageState extends State<MorningMealPage> {
                           onTap: () {
                             Navigator.push(
                               context,
+<<<<<<< HEAD
                               MaterialPageRoute(
                                 builder: (context) => RestaurantDetailPage(
                                   restaurantName: meal['menuName'],
@@ -259,11 +277,45 @@ class _MorningMealPageState extends State<MorningMealPage> {
                                     },
                                   ],
                                 ),
+=======
+                              PageRouteBuilder(
+                                pageBuilder: (context, animation, secondaryAnimation) =>
+                                    RestaurantDetailPage(
+                                      restaurantName: meal['menuName'],
+                                      description: meal['recipe'] ?? 'ไม่มีรายละเอียด',
+                                      ingredients: List<Map<String, String>>.from(
+                                        meal['ingredients']?.map<Map<String, String>>((ingredient) {
+                                          return {
+                                            'name': ingredient['name'],
+                                            'amount': ingredient['amount'],
+                                            'unit': ingredient['unit'],
+                                          };
+                                        }) ?? [],
+                                      ),
+                                    ),
+                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                  const begin = Offset(1.0, 0.0);
+                                  const end = Offset.zero;
+                                  const curve = Curves.easeInOut;
+
+                                  final tween = Tween(begin: begin, end: end);
+                                  final curvedAnimation = CurvedAnimation(
+                                    parent: animation,
+                                    curve: curve,
+                                  );
+
+                                  return SlideTransition(
+                                    position: tween.animate(curvedAnimation),
+                                    child: child,
+                                  );
+                                },
+>>>>>>> 1e7a5cc6e161f561b80cd4ac1ecfeff57843f670
                               ),
                             );
                           },
                           child: Card(
                             margin: const EdgeInsets.symmetric(vertical: 8.0),
+<<<<<<< HEAD
                             elevation: 4,
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
@@ -286,11 +338,30 @@ class _MorningMealPageState extends State<MorningMealPage> {
                                         meal['description'] ??
                                             'ไม่มีรายละเอียด',
                                         style: const TextStyle(fontSize: 16),
+=======
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Text(
+                                        meal['menuName'],
+                                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        meal['recipe'] ?? 'ไม่มีรายละเอียด',
+                                        style: const TextStyle(color: Colors.grey),
+>>>>>>> 1e7a5cc6e161f561b80cd4ac1ecfeff57843f670
                                       ),
                                     ],
                                   ),
                                   IconButton(
                                     icon: Icon(
+<<<<<<< HEAD
                                       _favoriteMeals[meal['menuName']] == true
                                           ? Icons.favorite
                                           : Icons.favorite_border,
@@ -308,6 +379,18 @@ class _MorningMealPageState extends State<MorningMealPage> {
                                           meal['menuName'],
                                           _favoriteMeals[meal['menuName']]!,
                                         );
+=======
+                                      _favoriteMeals[meal['menuName']] == 1
+                                          ? Icons.favorite
+                                          : Icons.favorite_border,
+                                      color: _favoriteMeals[meal['menuName']] == 1 ? Colors.red : null,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _favoriteMeals[meal['menuName']] =
+                                            _favoriteMeals[meal['menuName']] == 1 ? 0 : 1;
+                                        _updateFavoriteStatus(meal['menuName'], _favoriteMeals[meal['menuName']]!);
+>>>>>>> 1e7a5cc6e161f561b80cd4ac1ecfeff57843f670
                                       });
                                     },
                                   ),
