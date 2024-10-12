@@ -34,7 +34,8 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   final List<String> tips = [
     '🥗 กินผักและผลไม้ให้หลากหลายเพื่อรับวิตามินและแร่ธาตุ',
     '💧 ดื่มน้ำให้เพียงพอทุกวันเพื่อให้ร่างกายทำงานได้อย่างมีประสิทธิภาพ',
@@ -116,7 +117,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 flexibleSpace: FlexibleSpaceBar(
                   title: Text(
                     'แนะนำอาหาร 🍽️',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                   background: Image.asset(
                     'assets/images/Food.jpg',
@@ -146,7 +148,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                         textAlign: TextAlign.center,
                       ),
                       SizedBox(height: 30),
-                      ...menuItems.map((menuItem) => _buildMenuItem(context, menuItem)).toList(),
+                      ...menuItems
+                          .map((menuItem) => _buildMenuItem(context, menuItem))
+                          .toList(),
                       SizedBox(height: 30),
                       _buildTipCard(tip),
                     ],
@@ -173,7 +177,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => FavoritesPage(favoriteMenus: favoriteMenus),
+                  builder: (context) => FavoritesPage(),
                 ),
               );
             } else {

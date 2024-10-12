@@ -3,7 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:makefood/menu/restaurant_detail_page.dart'; // Import the RestaurantDetailPage
 
-class MorningMealPage extends StatefulWidget {  
+class MorningMealPage extends StatefulWidget {
   const MorningMealPage({Key? key}) : super(key: key);
 
   @override
@@ -63,14 +63,17 @@ class _MorningMealPageState extends State<MorningMealPage> {
     });
 
     try {
-      Query query = _firestore.collection('menus').where('meal', isEqualTo: 'morningmeal');
+      Query query = _firestore
+          .collection('menus')
+          .where('meal', isEqualTo: 'morningmeal');
 
       if (_selectedCategory != 'all') {
-        query = query.where('category', isEqualTo: _selectedCategory);
+        query = query.where('ingredient', isEqualTo: _selectedSubCategory);
       }
 
       if (_selectedSubCategory != null) {
-        query = query.where('subcategory', isEqualTo: _selectedSubCategory);
+        query =
+            query.where('ingredientsCategory', isEqualTo: _selectedCategory);
       }
 
       final querySnapshot = await query.get();
@@ -83,12 +86,14 @@ class _MorningMealPageState extends State<MorningMealPage> {
         return;
       }
 
-      final allMeals = querySnapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList();
+      final allMeals = querySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return data;
+      }).toList();
 
       for (var meal in allMeals) {
-        _favoriteMeals[meal['menuName']] = false;
+        final isFavorite = meal['favorites'] == 1;
+        _favoriteMeals[meal['menuName']] = isFavorite;
       }
 
       setState(() {
@@ -104,8 +109,35 @@ class _MorningMealPageState extends State<MorningMealPage> {
   }
 
   Future<void> _updateFavoriteStatus(String menuName, bool isFavorite) async {
-    print('Updated favorite status for $menuName to $isFavorite');
-    // Add your Firestore update logic here if needed
+    try {
+      print(
+          'Updating favorite status for menuName: $menuName, isFavorite: $isFavorite');
+
+      // ค้นหาเอกสารที่มี menuName ตรงกัน
+      final querySnapshot = await _firestore
+          .collection('menus')
+          .where('menuName', isEqualTo: menuName)
+          .limit(1) // จำกัดให้ค้นหาเอกสารเดียว
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // หากพบเอกสารที่ตรงกัน
+        final documentId = querySnapshot.docs.first.id; // รับ ID ของเอกสาร
+        print('Found document with ID: $documentId');
+
+        await _firestore
+            .collection('menus')
+            .doc(documentId)
+            .update({'favorites': isFavorite ? 1 : 0});
+
+        print(
+            'Updated favorites to ${isFavorite ? 1 : 0} for document ID: $documentId');
+      } else {
+        print('No document found for menuName: $menuName');
+      }
+    } catch (e) {
+      print('Error updating favorite status: $e');
+    }
   }
 
   @override
@@ -156,11 +188,13 @@ class _MorningMealPageState extends State<MorningMealPage> {
                     onChanged: (String? newValue) {
                       setState(() {
                         _selectedCategory = newValue!;
-                        _selectedSubCategory = null; // Reset sub-category when changing main category
+                        _selectedSubCategory =
+                            null; // Reset sub-category when changing main category
                         _fetchAllBreakfastMeals(); // Fetch meals based on new category
                       });
                     },
-                    items: _categories.map<DropdownMenuItem<String>>((category) {
+                    items:
+                        _categories.map<DropdownMenuItem<String>>((category) {
                       return DropdownMenuItem<String>(
                         value: category['value'],
                         child: Text(category['label']!),
@@ -171,8 +205,8 @@ class _MorningMealPageState extends State<MorningMealPage> {
               ],
             ),
             const SizedBox(height: 20),
-
-            if (_selectedCategory != 'all' && _subCategories.containsKey(_selectedCategory))
+            if (_selectedCategory != 'all' &&
+                _subCategories.containsKey(_selectedCategory))
               Row(
                 children: [
                   const Text(
@@ -189,7 +223,8 @@ class _MorningMealPageState extends State<MorningMealPage> {
                           _fetchAllBreakfastMeals(); // Fetch meals based on selected sub-category
                         });
                       },
-                      items: _subCategories[_selectedCategory]!.map<DropdownMenuItem<String>>((subCategory) {
+                      items: _subCategories[_selectedCategory]!
+                          .map<DropdownMenuItem<String>>((subCategory) {
                         return DropdownMenuItem<String>(
                           value: subCategory['value'],
                           child: Text(subCategory['label']!),
@@ -200,7 +235,6 @@ class _MorningMealPageState extends State<MorningMealPage> {
                 ],
               ),
             const SizedBox(height: 20),
-
             _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : Expanded(
@@ -212,71 +246,72 @@ class _MorningMealPageState extends State<MorningMealPage> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              PageRouteBuilder(
-                                pageBuilder: (context, animation, secondaryAnimation) =>
-                                    RestaurantDetailPage(
-                                      restaurantName: meal['menuName'],
-                                      description: meal['description'] ?? 'ไม่มีรายละเอียด',
-                                      ingredients: List<Map<String, String>>.from(
-                                        meal['ingredients']?.map<Map<String, String>>((ingredient) {
-                                          return {
-                                            'name': ingredient['name'],
-                                            'amount': ingredient['amount'],
-                                            'unit': ingredient['unit'],
-                                          };
-                                        }) ?? [],
-                                      ),
-                                    ),
-                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                  const begin = Offset(1.0, 0.0);
-                                  const end = Offset.zero;
-                                  const curve = Curves.easeInOut;
-
-                                  final tween = Tween(begin: begin, end: end);
-                                  final curvedAnimation = CurvedAnimation(
-                                    parent: animation,
-                                    curve: curve,
-                                  );
-
-                                  return SlideTransition(
-                                    position: tween.animate(curvedAnimation),
-                                    child: child,
-                                  );
-                                },
+                              MaterialPageRoute(
+                                builder: (context) => RestaurantDetailPage(
+                                  restaurantName: meal['menuName'],
+                                  description: meal['recipe'] ??
+                                      'ไม่มีรายละเอียด', // ส่ง recipe เป็น description
+                                  ingredients: [
+                                    {
+                                      'name': meal['ingredient'],
+                                      'amount': '1',
+                                      'unit': 'portion'
+                                    },
+                                  ],
+                                ),
                               ),
                             );
                           },
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(15),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.grey,
-                                  blurRadius: 5.0,
-                                  spreadRadius: 1.0,
-                                ),
-                              ],
-                            ),
-                            child: ListTile(
-                              title: Text(meal['menuName']),
-                              subtitle: Text(meal['description'] ?? 'ไม่มีรายละเอียด'),
-                              trailing: IconButton(
-                                icon: FaIcon(
-                                  _favoriteMeals[meal['menuName']]!
-                                      ? FontAwesomeIcons.solidHeart
-                                      : FontAwesomeIcons.heart,
-                                  color: _favoriteMeals[meal['menuName']]! ? Colors.red : Colors.grey,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    // Toggle favorite status
-                                    _favoriteMeals[meal['menuName']] = !_favoriteMeals[meal['menuName']]!;
-                                  });
-                                  _updateFavoriteStatus(meal['menuName'], _favoriteMeals[meal['menuName']]!);
-                                },
+                          child: Card(
+                            margin: const EdgeInsets.symmetric(vertical: 8.0),
+                            elevation: 4,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        meal['menuName'],
+                                        style: const TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      const SizedBox(height: 8.0),
+                                      Text(
+                                        meal['description'] ??
+                                            'ไม่มีรายละเอียด',
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
+                                    ],
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      _favoriteMeals[meal['menuName']] == true
+                                          ? Icons.favorite
+                                          : Icons.favorite_border,
+                                      color: _favoriteMeals[meal['menuName']] ==
+                                              true
+                                          ? Colors.red
+                                          : Colors.grey,
+                                    ),
+                                    onPressed: () {
+                                      // Toggle favorite status
+                                      setState(() {
+                                        _favoriteMeals[meal['menuName']] =
+                                            !_favoriteMeals[meal['menuName']]!;
+                                        _updateFavoriteStatus(
+                                          meal['menuName'],
+                                          _favoriteMeals[meal['menuName']]!,
+                                        );
+                                      });
+                                    },
+                                  ),
+                                ],
                               ),
                             ),
                           ),
