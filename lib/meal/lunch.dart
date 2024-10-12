@@ -55,16 +55,16 @@ class _LunchPageState extends State<LunchPage> {
   @override
   void initState() {
     super.initState();
-    _fetchAllDinnerMeals(); // Fetch all dinner meals on initialization
+    _fetchAllLunchMeals(); // Fetch all lunch meals on initialization
   }
 
-  Future<void> _fetchAllDinnerMeals() async {
+  Future<void> _fetchAllLunchMeals() async {
     setState(() {
       _isLoading = true; // Set loading state
     });
 
     try {
-      Query query = _firestore.collection('menus').where('meal', isEqualTo: 'dinnermeal');
+      Query query = _firestore.collection('menus').where('meal', isEqualTo: 'lunchmeal'); // Changed to 'lunchmeal'
 
       if (_selectedCategory != 'all') {
         query = query.where('category', isEqualTo: _selectedCategory);
@@ -116,7 +116,7 @@ class _LunchPageState extends State<LunchPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'อาหารเย็น',
+          'อาหารเที่ยง',
           style: TextStyle(color: Colors.black),
         ),
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
@@ -142,7 +142,7 @@ class _LunchPageState extends State<LunchPage> {
             ),
             const SizedBox(height: 20),
             const Text(
-              'รายการอาหารเย็นที่แนะนำ',
+              'รายการอาหารเที่ยงที่แนะนำ',
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
@@ -161,7 +161,7 @@ class _LunchPageState extends State<LunchPage> {
                       setState(() {
                         _selectedCategory = newValue!;
                         _selectedSubCategory = null; // Reset sub-category when changing main category
-                        _fetchAllDinnerMeals(); // Fetch meals based on new category
+                        _fetchAllLunchMeals(); // Fetch meals based on new category
                       });
                     },
                     items: _categories.map<DropdownMenuItem<String>>((category) {
@@ -190,7 +190,7 @@ class _LunchPageState extends State<LunchPage> {
                       onChanged: (String? newValue) {
                         setState(() {
                           _selectedSubCategory = newValue!;
-                          _fetchAllDinnerMeals(); // Fetch meals based on selected sub-category
+                          _fetchAllLunchMeals(); // Fetch meals based on selected sub-category
                         });
                       },
                       items: _subCategories[_selectedCategory]!.map<DropdownMenuItem<String>>((subCategory) {
@@ -265,21 +265,22 @@ class _LunchPageState extends State<LunchPage> {
                               ],
                             ),
                             child: ListTile(
-                              title: Text(meal['menuName']),
+                              title: Text(meal['menuName'] ?? 'ไม่มีชื่อ'),
                               subtitle: Text(meal['description'] ?? 'ไม่มีรายละเอียด'),
                               trailing: IconButton(
-                                icon: FaIcon(
-                                  _favoriteMeals[meal['menuName']]!
-                                      ? FontAwesomeIcons.solidHeart
-                                      : FontAwesomeIcons.heart,
-                                  color: _favoriteMeals[meal['menuName']]! ? Colors.red : Colors.grey,
+                                icon: Icon(
+                                  _favoriteMeals[meal['menuName']] == true
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color: _favoriteMeals[meal['menuName']] == true
+                                      ? Colors.red
+                                      : null,
                                 ),
                                 onPressed: () {
                                   setState(() {
-                                    // Toggle favorite status
-                                    _favoriteMeals[meal['menuName']] = !_favoriteMeals[meal['menuName']]!;
+                                    _favoriteMeals[meal['menuName']] = !_favoriteMeals[meal['menuName']]!; // Toggle favorite status
                                   });
-                                  _updateFavoriteStatus(meal['menuName'], _favoriteMeals[meal['menuName']]!);
+                                  _updateFavoriteStatus(meal['menuName'], _favoriteMeals[meal['menuName']]!); // Update favorite status in Firestore
                                 },
                               ),
                             ),

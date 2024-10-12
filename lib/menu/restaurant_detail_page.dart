@@ -27,6 +27,15 @@ class RestaurantDetailPage extends StatelessWidget {
             Navigator.pop(context);
           },
         ),
+        actions: [
+          IconButton(
+            icon: const FaIcon(FontAwesomeIcons.heart),
+            onPressed: () {
+              // เพิ่มฟังก์ชันการบันทึกเมนูโปรดที่นี่
+              _saveToFavorites(restaurantName);
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -70,11 +79,21 @@ class RestaurantDetailPage extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                         color: Colors.orange[800]),
                   ),
-                  const SizedBox(height: 10),
-                  ...ingredients.map((ingredient) => _buildIngredientRow(
-                          ingredient['name']!,
-                          ingredient['amount']!,
-                          ingredient['unit']!)).toList(), 
+                  const SizedBox(height: 8),
+                  ...ingredients.map((ingredient) {
+                    return _buildIngredientRow(
+                      ingredient['name'] ?? '',
+                      ingredient['amount'] ?? '',
+                      ingredient['unit'] ?? '',
+                    );
+                  }).toList(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      description, 
+                      style: const TextStyle(fontSize: 16, color: Colors.black87),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -86,13 +105,6 @@ class RestaurantDetailPage extends StatelessWidget {
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Color.fromARGB(255, 247, 113, 3)),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                description, 
-                style: const TextStyle(fontSize: 16, color: Colors.black87),
               ),
             ),
             Padding(
@@ -142,5 +154,10 @@ class RestaurantDetailPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _saveToFavorites(String restaurantName) {
+    // ฟังก์ชันในการบันทึกเมนูโปรด (สามารถใช้งานร่วมกับฐานข้อมูลหรือสถานะภายใน)
+    print('$restaurantName ถูกบันทึกเป็นโปรด');
   }
 }

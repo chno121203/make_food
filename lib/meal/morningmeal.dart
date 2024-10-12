@@ -3,7 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:makefood/menu/restaurant_detail_page.dart'; // Import the RestaurantDetailPage
 
-class MorningMealPage extends StatefulWidget {  
+class MorningMealPage extends StatefulWidget {
   const MorningMealPage({Key? key}) : super(key: key);
 
   @override
@@ -14,10 +14,11 @@ class _MorningMealPageState extends State<MorningMealPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<Map<String, dynamic>> _meals = [];
   bool _isLoading = true;
-  Map<String, bool> _favoriteMeals = {};
+  Map<String, int> _favoriteMeals = {}; // Change to int
   String _selectedCategory = 'all';
   String? _selectedSubCategory;
 
+  // Categories and subcategories as defined in your code
   final List<Map<String, String>> _categories = [
     {'label': 'ทั้งหมด', 'value': 'all'},
     {'label': 'เมนูเนื้อสัตว์', 'value': 'meat'},
@@ -27,28 +28,8 @@ class _MorningMealPageState extends State<MorningMealPage> {
   ];
 
   final Map<String, List<Map<String, String>>> _subCategories = {
-    'meat': [
-      {'label': 'เนื้อวัว', 'value': 'beef'},
-      {'label': 'เนื้อไก่', 'value': 'chicken'},
-      {'label': 'เนื้อแพะ', 'value': 'goat'},
-      {'label': 'เนื้อแกะ', 'value': 'lamb'},
-    ],
-    'seafood': [
-      {'label': 'กุ้ง', 'value': 'shrimp'},
-      {'label': 'หอย', 'value': 'shellfish'},
-      {'label': 'ปู', 'value': 'crab'},
-      {'label': 'ปลา', 'value': 'fish'},
-      {'label': 'หมึก', 'value': 'squid'},
-    ],
-    'vegetable': [
-      {'label': 'ผักใบเขียว', 'value': 'green_vegetable'},
-      {'label': 'ผักดอก', 'value': 'flower_vegetable'},
-    ],
-    'egg': [
-      {'label': 'ไข่ไก่', 'value': 'chicken_egg'},
-      {'label': 'ไข่เป็ด', 'value': 'duck_egg'},
-      {'label': 'ไข่เยี่ยวม้า', 'value': 'century_egg'},
-    ],
+    // Define subcategories as in your code
+    // ...
   };
 
   @override
@@ -88,7 +69,8 @@ class _MorningMealPageState extends State<MorningMealPage> {
           .toList();
 
       for (var meal in allMeals) {
-        _favoriteMeals[meal['menuName']] = false;
+        // Initialize favorite status
+        _favoriteMeals[meal['menuName']] = 0; // Initialize as 0 (not favorite)
       }
 
       setState(() {
@@ -103,9 +85,20 @@ class _MorningMealPageState extends State<MorningMealPage> {
     }
   }
 
-  Future<void> _updateFavoriteStatus(String menuName, bool isFavorite) async {
-    print('Updated favorite status for $menuName to $isFavorite');
-    // Add your Firestore update logic here if needed
+  Future<void> _updateFavoriteStatus(String menuName, int status) async {
+    print('Updated favorite status for $menuName to $status');
+    
+    try {
+      // Assuming you have a user ID to associate the favorite with
+      String userId = 'exampleUserId'; // Replace this with the actual user ID
+
+      // Update Firestore
+      await _firestore.collection('favorites').doc(userId).set({
+        menuName: status,
+      }, SetOptions(merge: true)); // Merge to update existing fields
+    } catch (e) {
+      print('Error updating favorite status: $e');
+    }
   }
 
   @override
@@ -172,6 +165,7 @@ class _MorningMealPageState extends State<MorningMealPage> {
             ),
             const SizedBox(height: 20),
 
+            // Subcategory Dropdown
             if (_selectedCategory != 'all' && _subCategories.containsKey(_selectedCategory))
               Row(
                 children: [
@@ -201,6 +195,7 @@ class _MorningMealPageState extends State<MorningMealPage> {
               ),
             const SizedBox(height: 20),
 
+            // Loading Indicator or Meal List
             _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : Expanded(
@@ -216,7 +211,7 @@ class _MorningMealPageState extends State<MorningMealPage> {
                                 pageBuilder: (context, animation, secondaryAnimation) =>
                                     RestaurantDetailPage(
                                       restaurantName: meal['menuName'],
-                                      description: meal['description'] ?? 'ไม่มีรายละเอียด',
+                                      description: meal['recipe'] ?? 'ไม่มีรายละเอียด',
                                       ingredients: List<Map<String, String>>.from(
                                         meal['ingredients']?.map<Map<String, String>>((ingredient) {
                                           return {
@@ -246,37 +241,40 @@ class _MorningMealPageState extends State<MorningMealPage> {
                               ),
                             );
                           },
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(15),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.grey,
-                                  blurRadius: 5.0,
-                                  spreadRadius: 1.0,
-                                ),
-                              ],
-                            ),
-                            child: ListTile(
-                              title: Text(meal['menuName']),
-                              subtitle: Text(meal['description'] ?? 'ไม่มีรายละเอียด'),
-                              trailing: IconButton(
-                                icon: FaIcon(
-                                  _favoriteMeals[meal['menuName']]!
-                                      ? FontAwesomeIcons.solidHeart
-                                      : FontAwesomeIcons.heart,
-                                  color: _favoriteMeals[meal['menuName']]! ? Colors.red : Colors.grey,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    // Toggle favorite status
-                                    _favoriteMeals[meal['menuName']] = !_favoriteMeals[meal['menuName']]!;
-                                  });
-                                  _updateFavoriteStatus(meal['menuName'], _favoriteMeals[meal['menuName']]!);
-                                },
+                          child: Card(
+                            margin: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        meal['menuName'],
+                                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Text(meal['recipe'] ?? 'ไม่มีรายละเอียด', maxLines: 2, overflow: TextOverflow.ellipsis),
+                                    ],
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      _favoriteMeals[meal['menuName']] == 1
+                                          ? FontAwesomeIcons.solidHeart
+                                          : FontAwesomeIcons.heart,
+                                      color: _favoriteMeals[meal['menuName']] == 1 ? Colors.red : Colors.grey,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        // Toggle favorite status
+                                        _favoriteMeals[meal['menuName']] = _favoriteMeals[meal['menuName']] == 1 ? 0 : 1;
+                                        _updateFavoriteStatus(meal['menuName'], _favoriteMeals[meal['menuName']]!); // Update Firestore
+                                      });
+                                    },
+                                  ),
+                                ],
                               ),
                             ),
                           ),
