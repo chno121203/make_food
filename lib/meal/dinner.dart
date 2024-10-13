@@ -221,7 +221,7 @@ class _DinnerPageState extends State<DinnerPage> {
                                 pageBuilder: (context, animation, secondaryAnimation) =>
                                     RestaurantDetailPage(
                                       restaurantName: meal['menuName'], // Pass menu name to detail page
-                                      description: meal['description'] ?? 'ไม่มีรายละเอียด', // Pass description
+                                      description: meal['recipe'] ?? 'ไม่มีรายละเอียด', // Pass description
                                       ingredients: List<Map<String, String>>.from(
                                         meal['ingredients']?.map<Map<String, String>>((ingredient) {
                                           return {
@@ -267,7 +267,7 @@ class _DinnerPageState extends State<DinnerPage> {
                             ),
                             child: ListTile(
                               title: Text(meal['menuName']),
-                              subtitle: Text(meal['description'] ?? 'ไม่มีรายละเอียด'),
+                              subtitle: Text(meal['recipe'] ?? 'ไม่มีรายละเอียด'),
                               trailing: IconButton(
                                 icon: FaIcon(
                                   _favoriteMeals[meal['menuName']]!
