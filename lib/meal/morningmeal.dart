@@ -68,11 +68,12 @@ class _MorningMealPageState extends State<MorningMealPage> {
           .where('meal', isEqualTo: 'morningmeal');
 
       if (_selectedCategory != 'all') {
-        query = query.where('category', isEqualTo: _selectedCategory);
+        query = query.where('ingredient', isEqualTo: _selectedSubCategory);
       }
 
       if (_selectedSubCategory != null) {
-        query = query.where('subcategory', isEqualTo: _selectedSubCategory);
+        query =
+            query.where('ingredientsCategory', isEqualTo: _selectedCategory);
       }
 
       final querySnapshot = await query.get();
@@ -187,8 +188,7 @@ class _MorningMealPageState extends State<MorningMealPage> {
                     onChanged: (String? newValue) {
                       setState(() {
                         _selectedCategory = newValue!;
-                        _selectedSubCategory =
-                            null; // Reset sub-category when changing main category
+                        _selectedSubCategory = null; // Reset sub-category when changing main category
                         _fetchAllBreakfastMeals(); // Fetch meals based on new category
                       });
                     },
@@ -245,41 +245,18 @@ class _MorningMealPageState extends State<MorningMealPage> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) =>
-                                        RestaurantDetailPage(
+                              MaterialPageRoute(
+                                builder: (context) => RestaurantDetailPage(
                                   restaurantName: meal['menuName'],
-                                  description:
-                                      meal['description'] ?? 'ไม่มีรายละเอียด',
-                                  ingredients: List<Map<String, String>>.from(
-                                    meal['ingredients']
-                                            ?.map<Map<String, String>>(
-                                                (ingredient) {
-                                          return {
-                                            'name': ingredient['name'],
-                                            'amount': ingredient['amount'],
-                                            'unit': ingredient['unit'],
-                                          };
-                                        }) ??
-                                        [], // Prevent null errors
-                                  ),
+                                  description: meal['recipe'] ?? 'ไม่มีรายละเอียด', // ส่ง recipe เป็น description
+                                  ingredients: [
+                                    {
+                                      'name': meal['ingredient'],
+                                      'amount': '1',
+                                      'unit': 'portion'
+                                    },
+                                  ],
                                 ),
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
-                                  const begin = Offset(1.0, 0.0);
-                                  const end = Offset.zero;
-                                  const curve = Curves.easeInOut;
-
-                                  final tween = Tween(begin: begin, end: end)
-                                      .chain(CurveTween(curve: curve));
-                                  final offsetAnimation =
-                                      animation.drive(tween);
-                                  return SlideTransition(
-                                    position: offsetAnimation,
-                                    child: child,
-                                  );
-                                },
                               ),
                             );
                           },
@@ -302,33 +279,26 @@ class _MorningMealPageState extends State<MorningMealPage> {
                                             fontSize: 20,
                                             fontWeight: FontWeight.bold),
                                       ),
-                                      const SizedBox(height: 8.0),
-                                      Text(
-                                        meal['description'] ??
-                                            'ไม่มีรายละเอียด',
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(meal['ingredient'] ?? ''),
                                     ],
                                   ),
                                   IconButton(
                                     icon: Icon(
                                       _favoriteMeals[meal['menuName']] == true
-                                          ? Icons.favorite
-                                          : Icons.favorite_border,
-                                      color: _favoriteMeals[meal['menuName']] ==
-                                              true
+                                          ? FontAwesomeIcons.solidHeart
+                                          : FontAwesomeIcons.heart,
+                                      color: _favoriteMeals[meal['menuName']] == true
                                           ? Colors.red
                                           : Colors.grey,
                                     ),
                                     onPressed: () {
-                                      // Toggle favorite status
                                       setState(() {
                                         _favoriteMeals[meal['menuName']] =
                                             !_favoriteMeals[meal['menuName']]!;
                                         _updateFavoriteStatus(
-                                          meal['menuName'],
-                                          _favoriteMeals[meal['menuName']]!,
-                                        );
+                                            meal['menuName'],
+                                            _favoriteMeals[meal['menuName']]!);
                                       });
                                     },
                                   ),

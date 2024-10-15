@@ -52,12 +52,6 @@ class _HomePageState extends State<HomePage>
       'color': Colors.blue,
     },
     {
-      'name': 'เมนูแนะนำยอดนิยม',
-      'page': RestaurantsPage(),
-      'icon': '⭐',
-      'color': Colors.amber,
-    },
-    {
       'name': 'เมนูที่คุณชอบ',
       'page': null,
       'icon': '❤️',

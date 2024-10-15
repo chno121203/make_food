@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:makefood/menu/restaurant_detail_page.dart'; // Import the RestaurantDetailPage
 
 class DinnerPage extends StatefulWidget {
-  const DinnerPage({super.key});
+  const DinnerPage({Key? key}) : super(key: key);
 
   @override
   _DinnerPageState createState() => _DinnerPageState();
@@ -14,8 +14,8 @@ class _DinnerPageState extends State<DinnerPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<Map<String, dynamic>> _meals = [];
   bool _isLoading = true;
-
-  String _selectedCategory = 'all'; // Default to 'all' category
+  Map<String, bool> _favoriteMeals = {};
+  String _selectedCategory = 'all';
   String? _selectedSubCategory;
 
   final List<Map<String, String>> _categories = [
@@ -51,28 +51,26 @@ class _DinnerPageState extends State<DinnerPage> {
     ],
   };
 
-  final Map<String, bool> _favoriteMeals = {};
-
   @override
   void initState() {
     super.initState();
-    _fetchAllDinnerMeals(); // Fetch all dinner meals on initialization
+    _fetchAllDinnerMeals(); // Update function name to reflect dinner
   }
 
   Future<void> _fetchAllDinnerMeals() async {
     setState(() {
-      _isLoading = true; // Set loading state
+      _isLoading = true;
     });
 
     try {
       Query query = _firestore.collection('menus').where('meal', isEqualTo: 'dinnermeal');
 
       if (_selectedCategory != 'all') {
-        query = query.where('category', isEqualTo: _selectedCategory);
+        query = query.where('ingredient', isEqualTo: _selectedSubCategory);
       }
 
       if (_selectedSubCategory != null) {
-        query = query.where('subcategory', isEqualTo: _selectedSubCategory);
+        query = query.where('ingredientsCategory', isEqualTo: _selectedCategory);
       }
 
       final querySnapshot = await query.get();
@@ -85,31 +83,56 @@ class _DinnerPageState extends State<DinnerPage> {
         return;
       }
 
-      // Get all meals
-      final allMeals = querySnapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList();
+      final allMeals = querySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return data;
+      }).toList();
 
-      // Initialize favorite status
       for (var meal in allMeals) {
-        _favoriteMeals[meal['menuName']] = false; // Default to not favorite
+        final isFavorite = meal['favorites'] == 1;
+        _favoriteMeals[meal['menuName']] = isFavorite;
       }
 
       setState(() {
-        _meals = allMeals; // Set all meals
+        _meals = allMeals;
         _isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        _isLoading = false; // Reset loading state on error
-      });
       print('Error fetching meals: $e');
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
   Future<void> _updateFavoriteStatus(String menuName, bool isFavorite) async {
-    print('Updated favorite status for $menuName to $isFavorite');
-    // Add your Firestore update logic here if needed
+    try {
+      print('Updating favorite status for menuName: $menuName, isFavorite: $isFavorite');
+
+      // ค้นหาเอกสารที่มี menuName ตรงกัน
+      final querySnapshot = await _firestore
+          .collection('menus')
+          .where('menuName', isEqualTo: menuName)
+          .limit(1) // จำกัดให้ค้นหาเอกสารเดียว
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // หากพบเอกสารที่ตรงกัน
+        final documentId = querySnapshot.docs.first.id; // รับ ID ของเอกสาร
+        print('Found document with ID: $documentId');
+
+        await _firestore
+            .collection('menus')
+            .doc(documentId)
+            .update({'favorites': isFavorite ? 1 : 0});
+
+        print('Updated favorites to ${isFavorite ? 1 : 0} for document ID: $documentId');
+      } else {
+        print('No document found for menuName: $menuName');
+      }
+    } catch (e) {
+      print('Error updating favorite status: $e');
+    }
   }
 
   @override
@@ -117,7 +140,7 @@ class _DinnerPageState extends State<DinnerPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'อาหารเย็น',
+          'อาหารเย็น', // Change title to "Dinner"
           style: TextStyle(color: Colors.black),
         ),
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
@@ -148,7 +171,6 @@ class _DinnerPageState extends State<DinnerPage> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-
             Row(
               children: [
                 const Text(
@@ -176,7 +198,6 @@ class _DinnerPageState extends State<DinnerPage> {
               ],
             ),
             const SizedBox(height: 20),
-
             if (_selectedCategory != 'all' && _subCategories.containsKey(_selectedCategory))
               Row(
                 children: [
@@ -194,7 +215,8 @@ class _DinnerPageState extends State<DinnerPage> {
                           _fetchAllDinnerMeals(); // Fetch meals based on selected sub-category
                         });
                       },
-                      items: _subCategories[_selectedCategory]!.map<DropdownMenuItem<String>>((subCategory) {
+                      items: _subCategories[_selectedCategory]!
+                          .map<DropdownMenuItem<String>>((subCategory) {
                         return DropdownMenuItem<String>(
                           value: subCategory['value'],
                           child: Text(subCategory['label']!),
@@ -205,7 +227,6 @@ class _DinnerPageState extends State<DinnerPage> {
                 ],
               ),
             const SizedBox(height: 20),
-
             _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : Expanded(
@@ -217,71 +238,64 @@ class _DinnerPageState extends State<DinnerPage> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              PageRouteBuilder(
-                                pageBuilder: (context, animation, secondaryAnimation) =>
-                                    RestaurantDetailPage(
-                                      restaurantName: meal['menuName'], // Pass menu name to detail page
-                                      description: meal['recipe'] ?? 'ไม่มีรายละเอียด', // Pass description
-                                      ingredients: List<Map<String, String>>.from(
-                                        meal['ingredients']?.map<Map<String, String>>((ingredient) {
-                                          return {
-                                            'name': ingredient['name'],
-                                            'amount': ingredient['amount'],
-                                            'unit': ingredient['unit'],
-                                          };
-                                        }) ?? [],
-                                      ),
-                                    ),
-                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                  const begin = Offset(1.0, 0.0);
-                                  const end = Offset.zero;
-                                  const curve = Curves.easeInOut;
-
-                                  final tween = Tween(begin: begin, end: end);
-                                  final curvedAnimation = CurvedAnimation(
-                                    parent: animation,
-                                    curve: curve,
-                                  );
-
-                                  return SlideTransition(
-                                    position: tween.animate(curvedAnimation),
-                                    child: child,
-                                  );
-                                },
+                              MaterialPageRoute(
+                                builder: (context) => RestaurantDetailPage(
+                                  restaurantName: meal['menuName'],
+                                  description: meal['recipe'] ?? '🧐', // ส่ง recipe เป็น description
+                                  ingredients: [
+                                    {
+                                      'name': meal['ingredient'],
+                                      'amount': '1',
+                                      'unit': 'portion'
+                                    },
+                                  ],
+                                ),
                               ),
                             );
                           },
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(15),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.grey,
-                                  blurRadius: 5.0,
-                                  spreadRadius: 1.0,
-                                ),
-                              ],
-                            ),
-                            child: ListTile(
-                              title: Text(meal['menuName']),
-                              subtitle: Text(meal['recipe'] ?? 'ไม่มีรายละเอียด'),
-                              trailing: IconButton(
-                                icon: FaIcon(
-                                  _favoriteMeals[meal['menuName']]!
-                                      ? FontAwesomeIcons.solidHeart
-                                      : FontAwesomeIcons.heart,
-                                  color: _favoriteMeals[meal['menuName']]! ? Colors.red : Colors.grey,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    // Toggle favorite status
-                                    _favoriteMeals[meal['menuName']] = !_favoriteMeals[meal['menuName']]!;
-                                  });
-                                  _updateFavoriteStatus(meal['menuName'], _favoriteMeals[meal['menuName']]!);
-                                },
+                          child: Card(
+                            margin: const EdgeInsets.symmetric(vertical: 8.0),
+                            elevation: 4,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          meal['menuName'] ?? '',
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          meal['recipe'] ?? '',
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: FaIcon(
+                                      _favoriteMeals[meal['menuName']] == true
+                                          ? FontAwesomeIcons.solidHeart
+                                          : FontAwesomeIcons.heart,
+                                      color: _favoriteMeals[meal['menuName']] == true ? Colors.red : Colors.grey,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _favoriteMeals[meal['menuName']] = !(_favoriteMeals[meal['menuName']] ?? false);
+                                        _updateFavoriteStatus(meal['menuName'], _favoriteMeals[meal['menuName']]!);
+                                      });
+                                    },
+                                  ),
+                                ],
                               ),
                             ),
                           ),
